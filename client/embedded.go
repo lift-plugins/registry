@@ -9,7 +9,7 @@
 // public/vendor.js
 // DO NOT EDIT!
 
-package ui
+package client
 
 import (
 	"bytes"

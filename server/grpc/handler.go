@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/hooklift/lift-registry/config"
-	"github.com/hooklift/lift-registry/web"
+	"github.com/hooklift/lift-registry/server/config"
+	"github.com/hooklift/lift-registry/server/web"
 )
 
 // ServiceEndpoint represents an endpoint in the GRPC server and HTTP Gateway muxer.

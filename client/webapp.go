@@ -1,6 +1,6 @@
-// Package ui embeds into UAA binary the webapp resources such as web html and
+// Package client embeds into UAA binary the webapp resources such as web html and
 // stylesheets.
-package ui
+package client
 
 import (
 	"bytes"

@@ -10,11 +10,11 @@ import (
 	"github.com/golang/glog"
 	_ "google.golang.org/grpc/grpclog/glogger"
 
-	"github.com/hooklift/lift-registry/config"
-	"github.com/hooklift/lift-registry/fileupload"
-	"github.com/hooklift/lift-registry/grpc"
-	"github.com/hooklift/lift-registry/ui"
-	"github.com/hooklift/lift-registry/web/registry"
+	"github.com/hooklift/lift-registry/client"
+	"github.com/hooklift/lift-registry/server/config"
+	"github.com/hooklift/lift-registry/server/grpc"
+	"github.com/hooklift/lift-registry/server/web/fileupload"
+	"github.com/hooklift/lift-registry/server/web/registry"
 )
 
 var (
@@ -60,7 +60,7 @@ func main() {
 	mux := http.DefaultServeMux
 
 	// These middlewares are invoked bottom up and order matters.
-	rack := ui.Handler(mux)
+	rack := client.Handler(mux)
 	rack = fileupload.Handler(mux, new(fileupload.S3))
 	rack = grpc.Handler(rack, services)
 	rack = logger.Handler(rack, logger.AppName(appName))

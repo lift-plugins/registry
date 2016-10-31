@@ -2,7 +2,7 @@ package registry
 
 import (
 	api "github.com/hooklift/apis/go"
-	"github.com/hooklift/lift-registry/grpc"
+	"github.com/hooklift/lift-registry/server/grpc"
 	context "golang.org/x/net/context"
 )
 

@@ -36,7 +36,7 @@ func securityUnary(next grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor
 		// 	return yield(ctx, req, info, handler)
 		// }
 
-		// glog.Info("Decoding JWT token...")
+		// glog.Info("Decoding and verifying JWT token...")
 		// authValue := values[0]
 		// glog.Infof("Token: %s", authValue)
 

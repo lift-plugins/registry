@@ -16,7 +16,7 @@ serve: dist
 	$(BIN_DIR)/static $(BUILD_DIR) --spa
 
 embed: dist
-	go-bindata -prefix "public" -o $(BINDATA_TARGET) -pkg ui public/...
+	go-bindata -prefix "public" -o $(BINDATA_TARGET) -pkg client public/...
 	gofmt -s -w $(BINDATA_TARGET)
 	goimports -w $(BINDATA_TARGET)
 

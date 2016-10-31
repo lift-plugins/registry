@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hooklift/uaa/openidc/pkg/render"
+	"github.com/hooklift/lift-registry/server/pkg/render"
 )
 
 // StorageProvider defines the contract for storage providers.
@@ -40,8 +40,8 @@ func Handler(h http.Handler, provider StorageProvider) http.Handler {
 			}
 		}
 
-		render.JSON(w, render.Options{
-			Status: http.StatusOK,
-		})
+		if err := render.JSON(w); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 }

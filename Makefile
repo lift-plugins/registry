@@ -10,10 +10,10 @@ testrace:
 	go test $(BLDTAGS) -parallel 2 -race ./...
 
 generate:
-	go generate ui/webapp.go
+	go generate client/webapp.go
 
 build:
-	go build $(BLDTAGS) $(LDFLAGS)
+	go build $(BLDTAGS) $(LDFLAGS) -o $(NAME) server/server.go
 
 clean:
 	go clean $(BLDTAGS) $(LDFLAGS)
@@ -26,9 +26,6 @@ compile: swagger
 	-output "build/{{.Dir}}_$(VERSION)_{{.OS}}_{{.Arch}}/$(NAME)" \
 	./...
 
-install:
-	go install $(BLDTAGS) $(LDFLAGS)
-
 dist: compile
 	$(eval FILES := $(shell ls build))
 	@rm -rf dist && mkdir dist
@@ -39,7 +36,7 @@ dist: compile
 	done
 
 swagger:
-	cp $(GOPATH)/src/github.com/hooklift/apis/browser/lift-registry.swagger.json ui/public/lib/api.swagger.json
+	cp $(GOPATH)/src/github.com/hooklift/apis/browser/lift-registry.swagger.json client/public/lib/api.swagger.json
 
 release: test dist
 	@latest_tag=$$(git describe --tags `git rev-list --tags --max-count=1`); \
@@ -54,4 +51,4 @@ devcerts:
 	openssl req -new -x509 -key certs/server-key.pem -out certs/server.pem -days 90
 
 
-.PHONY: build compile protoc install deps dist release
+.PHONY: build compile protoc deps dist release
