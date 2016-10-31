@@ -1,0 +1,163 @@
+@import '~normalize.css/normalize';
+@import '~foundation-sites/scss/foundation';
+@import '~include-media/dist/_include-media';
+
+@include foundation-flex-classes;
+@include foundation-flex-grid;
+
+// Variables
+$breakpoints: ('medium': 40em, 'large': 64em);
+
+$primary-color: rgba(24, 102, 176, 1);
+$neutral-color: #f0f0f0;
+$overlay-color: rgba(240,240,240, 0.3);
+$primary-color__start: #1866b0;
+$primary-color__middle: #4180bd;
+$primary-color__end: #359fd8;
+$primary-color__light: #359fd8;
+$input-label-color: #555;
+
+// Global styles
+
+html {
+	box-sizing: border-box;
+}
+
+body {
+	color: $neutral-color;
+	background-color: $primary-color;
+	background-attachment: fixed;
+	background-size: 100% 100%;
+	background-size: 100% 100vh;
+	overflow-x: hidden;
+	font-family: 'Gotham Narrow SSm', 'Helvetica Neue', Helvetica, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	line-height: 1.5;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	margin: 0;
+	background-image: linear-gradient(to bottom, $primary-color__start, $primary-color__start, $primary-color__middle, $primary-color__end, $primary-color__end);
+
+	&::before {
+		content: '';
+		position: fixed;
+		z-index: -1;
+		height: 100vh;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background-image: linear-gradient(to bottom, $primary-color 25%, $primary-color__light);
+	}
+}
+
+h3 {
+	font-weight: bold;
+	margin: 1rem 0;
+	font-size: large;
+	@include media('>=medium') {
+		font-size: 1.3rem;
+	}
+}
+
+a {
+	color: $neutral-color;
+	text-decoration: none;
+	border-bottom: 1px solid $neutral-color;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+select,
+input,
+button {
+	&:focus {
+		outline: 0;
+	}
+}
+
+.button {
+	border-radius: .25rem;
+	border: none;
+	cursor: pointer;
+	text-decoration: none;
+	padding: 0 1rem;
+	background-color: $primary-color__light;
+	box-shadow: inset 0 -2px 2px rgba(0, 0, 0, .05);
+	text-shadow: 0 1px 0 rgba(0, 0, 0, .15);
+	line-height: 2.5;
+	font-weight: bold;
+	display: inline-block;
+}
+
+.button__large {
+	width: 100%;
+	display: block;
+	padding: 0 2rem;
+	background-color: $primary-color;
+	color: $neutral-color;
+	font-size: 1.25rem;
+	height: 3rem;
+	line-height: 2.9375rem;
+	text-align: center;
+}
+
+input:not([type=submit]) {
+	display: block;
+	width: 100%;
+	color: $input-label-color;
+	border-radius: .25rem;
+	border: none;
+	box-shadow: inset 0 2px 2px 1px rgba(0, 0, 0, .1);
+	text-align: inherit;
+	font-weight: 500;
+	font-size: 1.25rem;
+	height: 3rem;
+	line-height: 2.9375rem;
+	margin-bottom: 2.5rem;
+}
+
+input:not([type=submit]):focus {
+	box-shadow: 0 2px 2px 1px rgba(0, 0, 0, .1);
+}
+
+.error__input {
+	text-align: center;
+	font-size: .875rem;
+	font-weight: 600;
+	display: block;
+	height: 2.5rem;
+	margin-bottom: 1rem;
+}
+
+.logo {
+	background: url('/images/logo-white-no-line.svg') no-repeat center bottom;
+	background-size: 100% auto;
+	height: 6rem;
+	width: 9.375rem;
+	display: block;
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
+
+	@include media('>=medium') {
+		width: 12.5rem;
+		margin-bottom: 3rem;
+	}
+
+	// Draws the line holding the first "o" in Hooklift logo.
+	&::after {
+		content: '';
+		position: absolute;
+		bottom: 1.875rem;
+		left: 25%;
+		width: 2px;
+		background: $neutral-color;
+		height: 500vh;
+		@include media('>=medium') {
+			bottom: 2rem;
+		}
+	}
+}
+
