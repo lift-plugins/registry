@@ -3,3 +3,4 @@ client/node_modules
 client/bower_components
 client/npm-debug.log
 tmp
+.vscode
