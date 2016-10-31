@@ -1,0 +1,227 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "lift-registry.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/publish": {
+      "post": {
+        "summary": "Publish indexes the plugin's metadata.",
+        "operationId": "Publish",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiPublishResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiPublishRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Registry"
+        ]
+      }
+    },
+    "/search": {
+      "post": {
+        "summary": "Search finds plugins given a search criteria.",
+        "operationId": "Search",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiSearchResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiSearchRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Registry"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiAlgorithm": {
+      "type": "string",
+      "enum": [
+        "SHA256",
+        "SHA512"
+      ],
+      "default": "SHA256",
+      "description": "Algorithm is the checksum algorithm used to hash packages content."
+    },
+    "apiArch": {
+      "type": "string",
+      "enum": [
+        "x86",
+        "AMD64",
+        "ARM",
+        "ARM64"
+      ],
+      "default": "x86",
+      "description": "Arch is the CPU architecture for which a package was built for."
+    },
+    "apiOS": {
+      "type": "string",
+      "enum": [
+        "MACOS",
+        "LINUX",
+        "WINDOWS",
+        "FREEBSD"
+      ],
+      "default": "MACOS",
+      "description": "OS are the supported operating systems by Lift."
+    },
+    "apiPackage": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "$ref": "#/definitions/apiAlgorithm",
+          "description": "Algorithm is the algorithm used to calculate the checksum."
+        },
+        "arch": {
+          "$ref": "#/definitions/apiArch",
+          "description": "Arch is the CPU architecture."
+        },
+        "checksum": {
+          "type": "string",
+          "format": "string",
+          "description": "Checksum of the package tarball."
+        },
+        "os": {
+          "$ref": "#/definitions/apiOS",
+          "description": "OS is the operating system."
+        },
+        "url": {
+          "type": "string",
+          "format": "string",
+          "description": "URL of where the package tarball is stored."
+        }
+      },
+      "description": "Package is an artifact of a plugin."
+    },
+    "apiPluginMetadata": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string",
+          "format": "string",
+          "description": "Author is the name and ideally the email of the plugin author."
+        },
+        "description": {
+          "type": "string",
+          "format": "string",
+          "description": "Description is a short description of what the plugin does."
+        },
+        "homepage": {
+          "type": "string",
+          "format": "string",
+          "description": "Homepage can be either the repo or the website of the plugin."
+        },
+        "license": {
+          "type": "string",
+          "format": "string",
+          "description": "License is the license governing the plugin."
+        },
+        "name": {
+          "type": "string",
+          "format": "string",
+          "description": "Name is the plugin name."
+        },
+        "version": {
+          "type": "string",
+          "format": "string",
+          "description": "Version is the version of the plugin."
+        }
+      }
+    },
+    "apiPublishRequest": {
+      "type": "object",
+      "properties": {
+        "package": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiPackage"
+          }
+        },
+        "plugin": {
+          "$ref": "#/definitions/apiPluginMetadata"
+        }
+      },
+      "description": "PublishRequest represents the request to publish a plugin and its packages."
+    },
+    "apiPublishResponse": {
+      "type": "object"
+    },
+    "apiSearchRequest": {
+      "type": "object",
+      "properties": {
+        "page_number": {
+          "type": "integer",
+          "format": "int32",
+          "title": "PageNumber allows to request a specific page"
+        },
+        "query": {
+          "type": "string",
+          "format": "string",
+          "title": "Query to search for. It follows the syntax specified at http://www.blevesearch.com/docs/Query-String-Query/"
+        },
+        "result_per_page": {
+          "type": "integer",
+          "format": "int32",
+          "description": "ResultPerPage determines how many results to return per page."
+        }
+      },
+      "description": "SearchRequest defines a message used to find specific plugins."
+    },
+    "apiSearchResponse": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiPackage"
+          }
+        },
+        "plugin": {
+          "$ref": "#/definitions/apiPluginMetadata"
+        },
+        "published_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "SearchResponse contains the list of packages found."
+    }
+  }
+}
