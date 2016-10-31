@@ -61,7 +61,7 @@ func main() {
 
 	// These middlewares are invoked bottom up and order matters.
 	rack := client.Handler(mux)
-	rack = fileupload.Handler(mux, new(fileupload.S3))
+	rack = fileupload.Handler(rack, new(fileupload.S3))
 	rack = grpc.Handler(rack, services)
 	rack = logger.Handler(rack, logger.AppName(appName))
 
