@@ -13,7 +13,7 @@ import (
 	"github.com/hooklift/lift-registry/client"
 	"github.com/hooklift/lift-registry/server/config"
 	"github.com/hooklift/lift-registry/server/grpc"
-	"github.com/hooklift/lift-registry/server/web/fileupload"
+	"github.com/hooklift/lift-registry/server/web/files"
 	"github.com/hooklift/lift-registry/server/web/registry"
 )
 
@@ -57,11 +57,12 @@ func main() {
 	services := []grpc.ServiceRegisterFn{
 		registry.Register,
 	}
+
 	mux := http.DefaultServeMux
 
 	// These middlewares are invoked bottom up and order matters.
 	rack := client.Handler(mux)
-	rack = fileupload.Handler(rack, new(fileupload.S3))
+	rack = files.Handler(rack)
 	rack = grpc.Handler(rack, services)
 	rack = logger.Handler(rack, logger.AppName(appName))
 

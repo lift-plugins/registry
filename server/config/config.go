@@ -18,21 +18,27 @@ var (
 	ClientID string
 	// ClientSecret is required in order to be able to refresh access tokens.
 	ClientSecret string
+	// S3Bucket is the bucket where all published plugin packages are going to be stored.
+	S3Bucket string
 )
 
 // Read loads the configuration values.
 func Read() {
-	// if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-	// 	log.Fatal("AWS_ACCESS_KEY_ID with permissions to send emails using Amazon SES is required")
-	// }
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+		log.Fatal("AWS_ACCESS_KEY_ID with permissions to send emails using Amazon SES is required")
+	}
 
-	// if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-	// 	log.Fatal("AWS_SECRET_ACCESS_KEY with permissions to send emails using Amazon SES is required")
-	// }
+	if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+		log.Fatal("AWS_SECRET_ACCESS_KEY with permissions to send emails using Amazon SES is required")
+	}
 
-	// if os.Getenv("AWS_REGION") == "" {
-	// 	os.Setenv("AWS_REGION", "us-east-1")
-	// }
+	if os.Getenv("AWS_REGION") == "" {
+		os.Setenv("AWS_REGION", "us-east-1")
+	}
+
+	if os.Getenv("S3_BUCKET") == "" {
+		S3Bucket = "hooklift-lift-registry"
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
