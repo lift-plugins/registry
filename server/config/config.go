@@ -22,17 +22,17 @@ var (
 
 // Read loads the configuration values.
 func Read() {
-	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-		log.Fatal("AWS_ACCESS_KEY_ID with permissions to send emails using Amazon SES is required")
-	}
+	// if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+	// 	log.Fatal("AWS_ACCESS_KEY_ID with permissions to send emails using Amazon SES is required")
+	// }
 
-	if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-		log.Fatal("AWS_SECRET_ACCESS_KEY with permissions to send emails using Amazon SES is required")
-	}
+	// if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+	// 	log.Fatal("AWS_SECRET_ACCESS_KEY with permissions to send emails using Amazon SES is required")
+	// }
 
-	if os.Getenv("AWS_REGION") == "" {
-		os.Setenv("AWS_REGION", "us-east-1")
-	}
+	// if os.Getenv("AWS_REGION") == "" {
+	// 	os.Setenv("AWS_REGION", "us-east-1")
+	// }
 
 	port := os.Getenv("PORT")
 	if port == "" {
