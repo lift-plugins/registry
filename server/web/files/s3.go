@@ -68,7 +68,7 @@ func (s *S3) Upload(reader *multipart.Reader) error {
 
 // Get streams down a package file from S3.
 // The caller must close the reader once it finishes reading from it.
-func (s *S3) Get(key string) (io.Reader, error) {
+func (s *S3) Get(key string) (io.ReadCloser, error) {
 	result, err := s.svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(config.S3Bucket),
 		Key:    aws.String(key),

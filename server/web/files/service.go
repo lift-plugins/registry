@@ -14,7 +14,7 @@ import (
 // StorageProvider defines the contract for storage providers.
 type StorageProvider interface {
 	Upload(reader *multipart.Reader) error
-	Get(filepath string) (io.Reader, error)
+	Get(filepath string) (io.ReadCloser, error)
 }
 
 // Response is the type of the payload sent back as response for uploading files.
@@ -45,6 +45,11 @@ func getPackage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer func() {
+		if err := reader.Close(); err != nil {
+			glog.Errorf("failed closing file reader: %+v", err)
+		}
+	}()
 
 	if _, err := io.Copy(w, reader); err != nil {
 		glog.Errorf("error streaming object from storage provider down to the user: %+v", err)
