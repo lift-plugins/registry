@@ -20,6 +20,8 @@ var (
 	ClientSecret string
 	// S3Bucket is the bucket where all published plugin packages are going to be stored.
 	S3Bucket string
+	// IndexFile contains the path to the database file where we store everything that is published.
+	IndexFile string
 )
 
 // Read loads the configuration values.
@@ -49,6 +51,11 @@ func Read() {
 	PrimaryDomain = os.Getenv("PRIMARY_DOMAIN")
 	if PrimaryDomain == "" {
 		PrimaryDomain = "localhost:" + Port
+	}
+
+	IndexFile = os.Getenv("INDEX_FILE")
+	if IndexFile == "" {
+		IndexFile = "tmp/registry.bleve"
 	}
 
 	// For development purposes, use the following command to regenerate cert:

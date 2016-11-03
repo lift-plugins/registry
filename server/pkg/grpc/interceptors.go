@@ -1,10 +1,14 @@
-package web
+package grpc
 
 import (
 	"errors"
+	"strings"
+
+	"github.com/golang/glog"
 
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -22,35 +26,37 @@ func securityUnary(next grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor
 	}
 
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-		// glog.V(4).Infof("GRPC request: %#v", req)
+		glog.V(4).Infof("GRPC request: %#v", req)
 
-		// md, ok := metadata.FromContext(ctx)
-		// if !ok {
-		// 	glog.Warning("No metadata found")
-		// 	return yield(ctx, req, info, handler)
-		// }
+		md, ok := metadata.FromContext(ctx)
+		if !ok {
+			glog.Warning("No metadata found")
+			return yield(ctx, req, info, handler)
+		}
 
-		// values, ok := md["authorization"]
-		// if !ok {
-		// 	glog.Warning("No authorization metadata found")
-		// 	return yield(ctx, req, info, handler)
-		// }
+		values, ok := md["authorization"]
+		if !ok {
+			glog.Warning("No authorization metadata found")
+			return yield(ctx, req, info, handler)
+		}
 
-		// glog.Info("Decoding and verifying JWT token...")
-		// authValue := values[0]
-		// glog.Infof("Token: %s", authValue)
+		glog.Info("Decoding and verifying JWT token...")
+		authValue := values[0]
+		glog.Infof("Token: %s", authValue)
 
-		// tokenParts := strings.Fields(authValue)
-		// if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-		// 	return nil, apierr.GRPC(accounts.ErrUnauthorized)
-		// }
+		tokenParts := strings.Fields(authValue)
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			return nil, errors.New("Unauthorized")
+		}
 
+		// TODO(c4milo): Reach out to authorization server via gRPC to verify token, we have to do it this way
+		// in order to properly support token or grant revocations.
 		// token, err := jwt.Decode(tokenParts[1])
 		// if err != nil {
-		// 	return nil, apierr.GRPC(err)
+		// 	return nil, errors.New("Unauthorized")
 		// }
 
-		// ctx = context.WithValue(ctx, jwt.TokenCtxKey, token)
+		//ctx = context.WithValue(ctx, jwt.TokenCtxKey, token)
 		return yield(ctx, req, info, handler)
 	}
 }
@@ -88,15 +94,15 @@ func metricsStream(next grpc.StreamServerInterceptor) grpc.StreamServerIntercept
 	}
 }
 
-// UnaryInterceptor chains all unary interceptors used.
-func UnaryInterceptor() grpc.UnaryServerInterceptor {
+// unaryInterceptor chains all unary interceptors used.
+func unaryInterceptors() grpc.UnaryServerInterceptor {
 	rack := securityUnary(nil)
 	rack = metricsUnary(rack)
 	return rack
 }
 
 // StreamInterceptor chains all stream interceptors used.
-func StreamInterceptor() grpc.StreamServerInterceptor {
+func streamInterceptors() grpc.StreamServerInterceptor {
 	rack := securityStream(nil)
 	rack = metricsStream(rack)
 	return rack

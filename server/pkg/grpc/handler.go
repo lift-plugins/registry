@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/hooklift/lift-registry/server/config"
-	"github.com/hooklift/lift-registry/server/web"
 )
 
 // ServiceEndpoint represents an endpoint in the GRPC server and HTTP Gateway muxer.
@@ -34,10 +33,13 @@ func initGRPCServer() *grpc.Server {
 		glog.Fatalf("Unable to load GRPC server transport TLS cert and key")
 	}
 
+	// TODO(c4milo): make GRPC connection against identity server.
+	// and pass it to interceptors
+
 	serverOpts := []grpc.ServerOption{
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
-		grpc.UnaryInterceptor(web.UnaryInterceptor()),
-		grpc.StreamInterceptor(web.StreamInterceptor()),
+		grpc.UnaryInterceptor(unaryInterceptors()),
+		grpc.StreamInterceptor(streamInterceptors()),
 	}
 	return grpc.NewServer(serverOpts...)
 }

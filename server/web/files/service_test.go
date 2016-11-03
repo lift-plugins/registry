@@ -1,14 +1,6 @@
 package files
 
-import (
-	"net/http"
-	"testing"
-)
+import "testing"
 
-func TestUpload(t *testing.T) {
-	r := new(http.Request)
-}
-
-func TestGetPackage(t *testing.T) {
-
-}
+func TestUpload(t *testing.T)   {}
+func TestDownload(t *testing.T) {}

@@ -6,13 +6,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/blevesearch/bleve"
 	"github.com/c4milo/handlers/logger"
 	"github.com/golang/glog"
 	_ "google.golang.org/grpc/grpclog/glogger"
 
 	"github.com/hooklift/lift-registry/client"
 	"github.com/hooklift/lift-registry/server/config"
-	"github.com/hooklift/lift-registry/server/grpc"
+	"github.com/hooklift/lift-registry/server/domain"
+	"github.com/hooklift/lift-registry/server/pkg/grpc"
+	"github.com/hooklift/lift-registry/server/pkg/security"
 	"github.com/hooklift/lift-registry/server/web/files"
 	"github.com/hooklift/lift-registry/server/web/registry"
 )
@@ -32,11 +35,22 @@ func init() {
 
 // Initializes plugins database
 func initDatabase() {
-	// mapping := bleve.NewIndexMapping()
-	// index, err := bleve.New("lift-plugins.bleve", mapping)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	glog.Infof("Opening Bleve index at %q...", config.IndexFile)
+
+	index, err := bleve.Open(config.IndexFile)
+	if err == bleve.ErrorIndexPathDoesNotExist {
+		glog.Info("Bleve index does not exist, creating it....")
+		index, err = bleve.New(config.IndexFile, bleve.NewIndexMapping())
+		if err != nil {
+			glog.Fatalf("Unable to create Bleve index: %+v", err)
+		}
+	}
+
+	if err != nil {
+		glog.Fatalf("unable to open Bleve index at %q", config.IndexFile)
+	}
+
+	domain.Init(index)
 }
 
 func main() {
@@ -63,6 +77,7 @@ func main() {
 	// These middlewares are invoked bottom up and order matters.
 	rack := client.Handler(mux)
 	rack = files.Handler(rack)
+	rack = security.Handler(rack)
 	rack = grpc.Handler(rack, services)
 	rack = logger.Handler(rack, logger.AppName(appName))
 

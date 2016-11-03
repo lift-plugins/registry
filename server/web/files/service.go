@@ -24,6 +24,9 @@ type Response struct {
 
 // upload streams up file packages to S3 and returns their URLs once it finishes.
 func upload(w http.ResponseWriter, r *http.Request) {
+	// get decoded token from r.Context() if no token is found return unauthorized.
+	// verify that token has https://lift.hookliftapp.io#write scope
+	// return unauthorized if it does not.
 	reader, err := r.MultipartReader()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
