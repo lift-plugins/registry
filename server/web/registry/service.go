@@ -3,11 +3,13 @@ package registry
 import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/pkg/errors"
 	context "golang.org/x/net/context"
 
 	api "github.com/hooklift/apis/go/lift-registry"
 	"github.com/hooklift/lift-registry/server/domain/plugin"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
+	"github.com/hooklift/uaa/web/tokens/jwt"
 )
 
 // Service implements Lift Registry service.
@@ -29,7 +31,9 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 		manifest.Description = m.Description
 		manifest.Homepage = m.Homepage
 		manifest.Name = m.Name
-		manifest.Version = (*api.Version)(&m.Version)
+		manifest.Version = m.Version
+		manifest.FilesUri = m.FilesURI
+		manifest.License = m.License
 
 		publishedAt, err := ptypes.TimestampProto(m.PublishedAt)
 		if err != nil {
@@ -41,11 +45,11 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 		manifest.Packages = make([]*api.Package, len(m.Packages))
 		for _, p := range m.Packages {
 			pkg := new(api.Package)
-			pkg.Algorithm = api.Algorithm(api.Algorithm_value[string(p.Algorithm)])
+			pkg.Name = p.Name
+			pkg.Algorithm = string(p.Algorithm)
 			pkg.Checksum = p.Checksum
-			pkg.Arch = api.Arch(api.Arch_value[string(p.Arch)])
-			pkg.Os = api.OS(api.OS_value[string(p.OS)])
-			pkg.Url = p.URL
+			pkg.Arch = string(p.Arch)
+			pkg.Os = string(p.OS)
 
 			manifest.Packages = append(manifest.Packages, pkg)
 		}
@@ -57,29 +61,32 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 
 // Publish indexes plugin metadata.
 func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.PublishResponse, error) {
-	// TODO(c4milo): get token from context
-	// TODO(c4milo): Verify signature
-	// TODO(c4milo): Verify expiration
-	// TODO(c4milo): validate that token has access to lift registry and scope for publishing plugins
-	// TODO(c4milo): Return unauthorized error if not
+	token, ok := jwt.FromContext(ctx)
+	if !ok || !token.Scopes.Has("global") || !token.Scopes.Has("write") {
+		// TODO(c4milo): Convert to grpc error
+		return nil, errors.New("Unauthorized")
+	}
+
 	manifest := new(plugin.Manifest)
 	p := r.GetPlugin()
 
 	manifest.Name = p.Name
+	manifest.AccountID = token.Subject
 	manifest.Author = plugin.Author(*p.Author)
 	manifest.Description = p.Description
 	manifest.Homepage = p.Homepage
 	manifest.License = p.License
-	manifest.Version = plugin.Version(*p.Version)
+	manifest.Version = p.Version
+	manifest.FilesURI = p.FilesUri
 
 	manifest.Packages = make([]*plugin.Package, len(p.Packages))
 	for _, pp := range p.GetPackages() {
 		pkg := new(plugin.Package)
+		pkg.Name = pp.Name
 		pkg.Algorithm = plugin.Algorithm(pp.Algorithm)
 		pkg.Arch = plugin.Arch(pp.Arch)
 		pkg.Checksum = pp.Checksum
 		pkg.OS = plugin.OS(pp.Os)
-		pkg.URL = pp.Url
 
 		manifest.Packages = append(manifest.Packages, pkg)
 	}
@@ -94,8 +101,14 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 
 // Unpublish ...
 func (s *Service) Unpublish(ctx context.Context, r *api.UnpublishRequest) (*api.UnpublishResponse, error) {
+	token, ok := jwt.FromContext(ctx)
+	if !ok && !token.Scopes.Has("global") && !token.Scopes.Has("write") {
+		// Convert to grpc error
+		return nil, errors.New("Unauthorized")
+	}
+
 	res := new(api.UnpublishResponse)
-	if err := plugin.Unpublish(r.Id); err != nil {
+	if err := plugin.Unpublish(r.Id, token.Subject); err != nil {
 		return nil, err
 	}
 	return res, nil

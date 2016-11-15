@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/hooklift/uaa/web/tokens/jwt"
 
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -49,14 +50,14 @@ func securityUnary(next grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor
 			return nil, errors.New("Unauthorized")
 		}
 
-		// TODO(c4milo): Reach out to authorization server via gRPC to verify token, we have to do it this way
-		// in order to properly support token or grant revocations.
-		// token, err := jwt.Decode(tokenParts[1])
-		// if err != nil {
-		// 	return nil, errors.New("Unauthorized")
-		// }
+		tokenValue := tokenParts[1]
 
-		//ctx = context.WithValue(ctx, jwt.TokenCtxKey, token)
+		token, err := identity.VerifyToken(ctx, tokenValue)
+		if err != nil {
+			return nil, errors.New("Unauthorized")
+		}
+
+		ctx = jwt.NewContext(ctx, token)
 		return yield(ctx, req, info, handler)
 	}
 }

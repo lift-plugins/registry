@@ -1,8 +1,11 @@
 package plugin
 
 import (
-	"errors"
 	"time"
+
+	version "github.com/hashicorp/go-version"
+	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Repo should be initialized by a concrete repository implementation.
@@ -12,7 +15,7 @@ var Repo Repository
 type Repository interface {
 	Search(query string, pageNumber, resultsPerPage int) ([]*Manifest, error)
 	Save(p *Manifest) error
-	Delete(id string) error
+	Delete(id, accountID string) error
 }
 
 // Arch is the CPU architecture for which a plugin package was compiled.
@@ -49,28 +52,27 @@ type Author struct {
 	Email string `json:"email"`
 }
 
-// Version is the plugin version being published.
-type Version struct {
-	Major uint32 `json:"major"`
-	Minor uint32 `json:"minor"`
-	Patch uint32 `json:"patch"`
-}
-
 // Package is a plugin tarball prepared for a given CPU architecture and operating system.
 type Package struct {
+	Name      string    `json:"name"`
 	Arch      Arch      `json:"arch"`
 	OS        OS        `json:"os"`
-	URL       string    `json:"url"`
 	Checksum  string    `json:"checksum"`
 	Algorithm Algorithm `json:"algorithm"`
 }
 
 // Manifest is the document we use to index and return plugin manifest info.
 type Manifest struct {
+	// Internal document ID
+	ID string `json:"_id"`
+	// Account publishing the plugin.
+	AccountID string `json:"_account_id"`
 	// Name is the name given to the plugin
 	Name string `json:"name"`
+	// FilesURI is the base URL used to download plugin packages
+	FilesURI string `json:"files_uri"`
 	// Version is the version number given to the plugin
-	Version Version `json:"version"`
+	Version string `json:"version"`
 	// Description is a short text describing what the plugin is for.
 	Description string `json:"description"`
 	// Author is the company or individual who developed the plugin.
@@ -96,13 +98,31 @@ func Publish(p *Manifest) error {
 		return errors.New("a valid manifest is required")
 	}
 
+	if len(p.Packages) == 0 {
+		return errors.New("list of packages missing")
+	}
+
+	ver, err := version.NewVersion(p.Version)
+	if err != nil {
+		return errors.Wrap(err, "invalid plugin version")
+	}
+
+	p.Version = ver.String()
+	p.ID = uuid.NewV4().String()
 	p.PublishedAt = time.Now()
 
 	return Repo.Save(p)
 }
 
 // Unpublish removes a plugin from the index.
-func Unpublish(id string) error {
-	return Repo.Delete(id)
-	// TODO(c4milo): Remove packages from files.
+func Unpublish(id, accountID string) error {
+	if id == "" {
+		return errors.New("document ID is required")
+	}
+
+	if accountID == "" {
+		return errors.New("account ID is required")
+	}
+
+	return Repo.Delete(id, accountID)
 }

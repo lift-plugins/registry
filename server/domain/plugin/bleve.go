@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/blevesearch/bleve"
+	"github.com/pkg/errors"
 )
 
 // RepoBleve represents an implementation of the Repo interface for Bleve search engine.
@@ -38,12 +39,37 @@ func (r *RepoBleve) Search(query string, pageNumber, resultsPerPage int) ([]*Man
 
 // Save indexes plugin metadata in Bleve's index.
 func (r *RepoBleve) Save(p *Manifest) error {
-	// We use the name of the plugin as the ID to make sure there is always one document
-	// in the index for the same plugin.
-	return r.index.Index(p.Name, p)
+	if p == nil {
+		return errors.New("manifest is required")
+	}
+
+	if p.ID == "" {
+		return errors.New("ID is required")
+	}
+
+	return r.index.Index(p.ID, p)
 }
 
 // Delete removes plugin from Bleve index.
-func (r *RepoBleve) Delete(id string) error {
-	return r.index.Delete(id)
+func (r *RepoBleve) Delete(id, accountID string) error {
+	if id == "" {
+		return errors.New("document ID is required")
+	}
+
+	if accountID == "" {
+		return errors.New("account ID is required")
+	}
+
+	doc, err := r.index.Document(id)
+	if err != nil {
+		return errors.Wrapf(err, "document ID %q does not exist", id)
+	}
+
+	for _, f := range doc.Fields {
+		if f.Name() == accountID {
+			return r.index.Delete(id)
+		}
+	}
+
+	return nil
 }
