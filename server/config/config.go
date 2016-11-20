@@ -22,6 +22,8 @@ var (
 	S3Bucket string
 	// IndexFile contains the path to the database file where we store everything that is published.
 	IndexFile string
+	// IdentityAddress is the address to the identity server used to verify user's tokens.
+	IdentityAddress string
 )
 
 // Read loads the configuration values.
@@ -56,6 +58,11 @@ func Read() {
 	IndexFile = os.Getenv("INDEX_FILE")
 	if IndexFile == "" {
 		IndexFile = "tmp/registry.bleve"
+	}
+
+	IdentityAddress = os.Getenv("IDENTITY_ADDR")
+	if IdentityAddress == "" {
+		IdentityAddress = "https://localhost:9000"
 	}
 
 	// For development purposes, use the following command to regenerate cert:

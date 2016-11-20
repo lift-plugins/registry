@@ -9,6 +9,7 @@ import (
 	api "github.com/hooklift/apis/go/lift-registry"
 	"github.com/hooklift/lift-registry/server/domain/plugin"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
+	"github.com/hooklift/lift-registry/server/pkg/identity"
 	"github.com/hooklift/uaa/web/tokens/jwt"
 )
 
@@ -61,10 +62,16 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 
 // Publish indexes plugin metadata.
 func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.PublishResponse, error) {
-	token, ok := jwt.FromContext(ctx)
-	if !ok || !token.Scopes.Has("global") || !token.Scopes.Has("write") {
-		// TODO(c4milo): Convert to grpc error
-		return nil, errors.New("Unauthorized")
+	token, ok := identity.FromContext(ctx)
+	if !ok {
+		return nil, errors.New("unauthorized")
+	}
+
+	_, okg := token.Scopes["global"]
+	_, okw := token.Scopes["write"]
+
+	if !okg || !okw {
+		return nil, errors.New("unauthorized")
 	}
 
 	manifest := new(plugin.Manifest)
@@ -104,7 +111,7 @@ func (s *Service) Unpublish(ctx context.Context, r *api.UnpublishRequest) (*api.
 	token, ok := jwt.FromContext(ctx)
 	if !ok && !token.Scopes.Has("global") && !token.Scopes.Has("write") {
 		// Convert to grpc error
-		return nil, errors.New("Unauthorized")
+		return nil, errors.New("unauthorized")
 	}
 
 	res := new(api.UnpublishResponse)

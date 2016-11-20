@@ -13,7 +13,7 @@ import (
 
 //go:generate make embed
 
-// Handler serves static assets and does not forward the request to any handlers. This handler is supposed to be
+// Handler serves static assets and does not forward the request to any more handlers. This handler is supposed to be
 // initiliazed last in the middleware chain.
 func Handler(h http.Handler) http.Handler {
 	custom404, _ := Asset("404.html")

@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/hooklift/lift-registry/server/config"
+	"github.com/hooklift/lift-registry/server/pkg/grpc/interceptors"
 )
 
 // ServiceEndpoint represents an endpoint in the GRPC server and HTTP Gateway muxer.
@@ -33,13 +34,18 @@ func initGRPCServer() *grpc.Server {
 		glog.Fatalf("Unable to load GRPC server transport TLS cert and key")
 	}
 
-	// TODO(c4milo): make GRPC connection against identity server.
-	// and pass it to interceptors
-
 	serverOpts := []grpc.ServerOption{
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
-		grpc.UnaryInterceptor(unaryInterceptors()),
-		grpc.StreamInterceptor(streamInterceptors()),
+		grpc.UnaryInterceptor(func() grpc.UnaryServerInterceptor {
+			interceptor := interceptors.UnarySecurity(interceptors.DefaultUnary, config.ClientID)
+			interceptor = interceptors.UnaryMetrics(interceptor)
+			return interceptor
+		}()),
+		grpc.StreamInterceptor(func() grpc.StreamServerInterceptor {
+			interceptor := interceptors.StreamSecurity(interceptors.DefaultStream)
+			interceptor = interceptors.StreamMetrics(interceptor)
+			return interceptor
+		}()),
 	}
 	return grpc.NewServer(serverOpts...)
 }
@@ -49,22 +55,22 @@ func initGRPCLocalClient() *grpc.ClientConn {
 	certPool := x509.NewCertPool()
 	ok := certPool.AppendCertsFromPEM([]byte(config.TLSCert))
 	if !ok {
-		glog.Fatal("Unable to append server TLS cert to cert pool")
+		glog.Fatal("grpc-gw: unable to append server TLS cert to cert pool")
 	}
 
 	clientCreds := credentials.NewClientTLSFromCert(certPool, config.PrimaryDomain)
 	clientOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(clientCreds),
 		grpc.WithBackoffMaxDelay(1 * time.Second),
-		grpc.WithUserAgent("grpc-json-gateway"),
+		grpc.WithUserAgent("grpc-gw"),
 	}
 
-	glog.V(2).Info("Connecting to local GRPC server...")
+	glog.V(2).Info("grpc-gw: connecting to local GRPC server...")
 
 	address := "localhost:" + config.Port
 	clientConn, err := grpc.Dial(address, clientOpts...)
 	if err != nil {
-		glog.Fatalf("failed to listen: %v", err)
+		glog.Fatalf("grpc-gw: failed to connect to local server: %v", err)
 	}
 	return clientConn
 }

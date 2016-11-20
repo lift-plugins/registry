@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/hooklift/lift-registry/server/pkg/identity"
 	"github.com/hooklift/lift-registry/server/pkg/render"
-	"github.com/hooklift/uaa/web/tokens/jwt"
 )
 
 // StorageProvider defines the contract for storage providers.
@@ -25,9 +25,16 @@ type Response struct {
 
 // upload streams up file packages to S3 and returns their URLs once it finishes.
 func upload(w http.ResponseWriter, r *http.Request) {
-	token, ok := jwt.FromContext(r.Context())
+	token, ok := identity.FromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-	if !ok || !token.Scopes.Has("global") || !token.Scopes.Has("write") {
+	_, okg := token.Scopes["global"]
+	_, okw := token.Scopes["write"]
+
+	if !okg || !okw {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

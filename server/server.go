@@ -15,7 +15,7 @@ import (
 	"github.com/hooklift/lift-registry/server/config"
 	"github.com/hooklift/lift-registry/server/domain"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
-	"github.com/hooklift/lift-registry/server/pkg/security"
+	"github.com/hooklift/lift-registry/server/pkg/identity"
 	"github.com/hooklift/lift-registry/server/web/files"
 	"github.com/hooklift/lift-registry/server/web/registry"
 )
@@ -26,6 +26,9 @@ var (
 
 	// AppName is also injected during the build process from the Makefile.
 	AppName string
+
+	// clientID is the OpenID Connect client application ID assigned to this service.
+	clientID = "eac560d0-3d97-480e-af3f-95f155374988"
 )
 
 func init() {
@@ -34,15 +37,16 @@ func init() {
 }
 
 // Initializes plugins database
-func initDatabase() {
+func initBleve() {
 	glog.Infof("Opening Bleve index at %q...", config.IndexFile)
 
 	index, err := bleve.Open(config.IndexFile)
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		glog.Info("Bleve index does not exist, creating it....")
+
 		index, err = bleve.New(config.IndexFile, bleve.NewIndexMapping())
 		if err != nil {
-			glog.Fatalf("Unable to create Bleve index: %+v", err)
+			glog.Fatalf("unable to create Bleve index: %+v", err)
 		}
 	}
 
@@ -60,8 +64,8 @@ func main() {
 	// Reads configurations values
 	config.Read()
 
-	// Initializes database
-	initDatabase()
+	// Initializes Bleve index
+	initBleve()
 
 	// Initializes metrics sink
 	// sink, _ := metrics.NewStatsiteSink(config.StatsiteAddr)
@@ -72,14 +76,12 @@ func main() {
 		registry.Register,
 	}
 
-	mux := http.DefaultServeMux
-
 	// These middlewares are invoked bottom up and order matters.
-	rack := client.Handler(mux)
-	rack = files.Handler(rack)
-	rack = security.Handler(rack)
-	rack = grpc.Handler(rack, services)
-	rack = logger.Handler(rack, logger.AppName(appName))
+	handler := client.Handler(http.DefaultServeMux) // Single Page Application  web UI
+	handler = files.Handler(handler)                // File management API to upload or download packages
+	handler = identity.Handler(handler, clientID)   // HTTP security filter, for non gRPC requests
+	handler = grpc.Handler(handler, services)       // gRPC services, uses interceptors to verify authorization tokens.
+	handler = logger.Handler(handler, logger.AppName(appName))
 
 	tlsKeyPair, err := tls.X509KeyPair([]byte(config.TLSCert), []byte(config.TLSKey))
 	if err != nil {
@@ -89,7 +91,7 @@ func main() {
 	address := ":" + config.Port
 	srv := &http.Server{
 		Addr:    address,
-		Handler: rack,
+		Handler: handler,
 		// This is only for GRPC Gateway HTTP server, since GRPC handles its own transport security.
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{tlsKeyPair},
