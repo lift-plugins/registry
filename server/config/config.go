@@ -14,8 +14,8 @@ var (
 	TLSCert string
 	// TLSKey is the PEM encoded value of the TLS private key used to generate the certificate
 	TLSKey string
-	// ClientID is the OAuth2 client application identifier assigned by Hooklift Identity
-	ClientID string
+	// ClientURI is the OAuth2 client application URI as registered in Hooklift Identity Provider
+	ClientURI string
 	// ClientSecret is required in order to be able to refresh access tokens.
 	ClientSecret string
 	// S3Bucket is the bucket where all published plugin packages are going to be stored.
@@ -110,5 +110,10 @@ h85koZ3kbKMGdDBqgb5gqgwZF1rCCpjff+o3D3JaAMYosACOyHn8lnJOcpryqUkw
 CklxSQqleLJM4EGSitMm8119tzYhaCY=
 -----END EC PRIVATE KEY-----
 		`
+	}
+
+	ClientURI = os.Getenv("OAUTH2_CLIENT_URI")
+	if ClientURI == "" {
+		ClientURI = "https://lift.hooklift.io"
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/golang/glog"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -37,7 +36,7 @@ func initGRPCServer() *grpc.Server {
 	serverOpts := []grpc.ServerOption{
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 		grpc.UnaryInterceptor(func() grpc.UnaryServerInterceptor {
-			interceptor := interceptors.UnarySecurity(interceptors.DefaultUnary, config.ClientID)
+			interceptor := interceptors.UnarySecurity(interceptors.DefaultUnary, config.ClientURI)
 			interceptor = interceptors.UnaryMetrics(interceptor)
 			return interceptor
 		}()),
@@ -61,7 +60,7 @@ func initGRPCLocalClient() *grpc.ClientConn {
 	clientCreds := credentials.NewClientTLSFromCert(certPool, config.PrimaryDomain)
 	clientOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(clientCreds),
-		grpc.WithBackoffMaxDelay(1 * time.Second),
+		//grpc.WithBackoffMaxDelay(1 * time.Second),
 		grpc.WithUserAgent("grpc-gw"),
 	}
 
