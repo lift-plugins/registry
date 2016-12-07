@@ -11,13 +11,13 @@ import (
 )
 
 var (
-	errUnauthorized = errors.New("Required Authorization. Token not found")
+	errUnauthorized = errors.New("Authorization required. Access token not found")
 	accessTkCookie  = "hatk"
 )
 
 // Handler verifies authorization tokens against Hooklift Identity service.
-func Handler(h http.Handler, clientID string) http.Handler {
-	accounts := idapi.NewAccountsClient(Connection(clientID))
+func Handler(h http.Handler, clientURI string) http.Handler {
+	accounts := idapi.NewAccountsClient(Connection(clientURI))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Skip gRPC requests if this handler gets misplaced.
@@ -29,12 +29,18 @@ func Handler(h http.Handler, clientID string) http.Handler {
 		token := r.Header.Get("authorization")
 		var tokenValue string
 		if token == "" {
+			// If we didn't find an authorization header, we check the http-only cookie "hatk" for a valid access token.
 			sessionCookie, err := r.Cookie(accessTkCookie)
+			// Lets specific endpoint handler to reject if authorization is required.
 			if err != nil {
 				h.ServeHTTP(w, r)
 				return
 			}
 
+			// Since we have a token within a cookie, it means the user signed in from the browser. So
+			// we need to take care of refreshing the access token when it is expired.
+			// TODO(c4milo): Verify if token expired and refresh it
+			// TODO(c4milo): Set new tokens in an http-only cookie.
 			tokenValue = sessionCookie.Value
 		} else {
 			tokenParts := strings.Fields(token)
@@ -52,8 +58,8 @@ func Handler(h http.Handler, clientID string) http.Handler {
 		}
 
 		res, err := accounts.VerifyToken(r.Context(), &idapi.VerifyTokenRequest{
-			ClientId: clientID,
-			Token:    tokenValue,
+			ClientUri: clientURI,
+			Token:     tokenValue,
 		})
 		if err != nil {
 			glog.Errorf("%+v", errors.Wrapf(err, "failed verifying token"))

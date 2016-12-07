@@ -10,7 +10,7 @@ import (
 	"github.com/hooklift/lift-registry/server/domain/plugin"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
 	"github.com/hooklift/lift-registry/server/pkg/identity"
-	"github.com/hooklift/uaa/web/tokens/jwt"
+	"github.com/hooklift/uaa/service/tokens/jwt"
 )
 
 // Service implements Lift Registry service.
@@ -18,12 +18,13 @@ type Service struct{}
 
 // Search finds Lift plugins in the registry.
 func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.SearchResponse, error) {
+	res := new(api.SearchResponse)
+
 	matches, err := plugin.Search(r.Query, int(r.PageNumber), int(r.ResultPerPage))
 	if err != nil {
-		return nil, err
-	}
 
-	res := new(api.SearchResponse)
+		return res, err
+	}
 
 	// Annoying conversion from domain object to api object.
 	for _, m := range matches {
@@ -70,7 +71,7 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 	_, okg := token.Scopes["global"]
 	_, okw := token.Scopes["write"]
 
-	if !okg || !okw {
+	if !okg && !okw {
 		return nil, errors.New("unauthorized")
 	}
 
@@ -98,11 +99,12 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 		manifest.Packages = append(manifest.Packages, pkg)
 	}
 
+	res := new(api.PublishResponse)
+
 	if err := plugin.Publish(manifest); err != nil {
 		return nil, err
 	}
 
-	res := new(api.PublishResponse)
 	return res, nil
 }
 

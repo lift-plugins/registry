@@ -16,8 +16,8 @@ import (
 	"github.com/hooklift/lift-registry/server/domain"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
 	"github.com/hooklift/lift-registry/server/pkg/identity"
-	"github.com/hooklift/lift-registry/server/web/files"
-	"github.com/hooklift/lift-registry/server/web/registry"
+	"github.com/hooklift/lift-registry/server/service/files"
+	"github.com/hooklift/lift-registry/server/service/registry"
 )
 
 var (
@@ -26,9 +26,6 @@ var (
 
 	// AppName is also injected during the build process from the Makefile.
 	AppName string
-
-	// clientID is the OpenID Connect client application ID assigned to this service.
-	clientID = "eac560d0-3d97-480e-af3f-95f155374988"
 )
 
 func init() {
@@ -77,10 +74,10 @@ func main() {
 	}
 
 	// These middlewares are invoked bottom up and order matters.
-	handler := client.Handler(http.DefaultServeMux) // Single Page Application  web UI
-	handler = files.Handler(handler)                // File management API to upload or download packages
-	handler = identity.Handler(handler, clientID)   // HTTP security filter, for non gRPC requests
-	handler = grpc.Handler(handler, services)       // gRPC services, uses interceptors to verify authorization tokens.
+	handler := client.Handler(http.DefaultServeMux)       // Single Page Application  web UI
+	handler = files.Handler(handler)                      // File management API to upload or download packages
+	handler = identity.Handler(handler, config.ClientURI) // HTTP security filter, for non gRPC requests
+	handler = grpc.Handler(handler, services)             // gRPC services, uses interceptors to verify authorization tokens.
 	handler = logger.Handler(handler, logger.AppName(appName))
 
 	tlsKeyPair, err := tls.X509KeyPair([]byte(config.TLSCert), []byte(config.TLSKey))
@@ -96,7 +93,7 @@ func main() {
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{tlsKeyPair},
 		},
-		//ReadTimeout:  5 * time.Second,
+		// ReadTimeout: 15 * time.Second,
 		//WriteTimeout: 15 * time.Second,
 	}
 

@@ -3,7 +3,6 @@ package identity
 import (
 	"context"
 	"crypto/x509"
-	"errors"
 	"log"
 	"net/url"
 	"sync"
@@ -11,6 +10,7 @@ import (
 	"github.com/golang/glog"
 	idapi "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift-registry/server/config"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -18,23 +18,28 @@ import (
 var (
 	grpcClient *grpc.ClientConn
 	once       sync.Once
+	// tlsCert is defined when compiling with build tag "dev"
+	tlsCert string
 )
 
 // Connection returns a connection to the Identity service.
 // If a connection was previously established, it returns it and skips creating a new one.
-func Connection(clientID string) *grpc.ClientConn {
+func Connection(clientURI string) *grpc.ClientConn {
 	once.Do(func() {
-		certPool := x509.NewCertPool()
-		ok := certPool.AppendCertsFromPEM([]byte(config.TLSCert))
-		if !ok {
-			log.Fatalf("%+v", errors.New("unable to append certificate to cert pool"))
+		clientOpts := []grpc.DialOption{
+			// uses default backoff re-connections: https://github.com/grpc/grpc/blob/master/doc/connection-backoff.md
+			grpc.WithUserAgent(clientURI),
 		}
 
-		clientCreds := credentials.NewClientTLSFromCert(certPool, config.IdentityAddress)
-		clientOpts := []grpc.DialOption{
-			grpc.WithTransportCredentials(clientCreds),
-			// uses default backoff re-connections: https://github.com/grpc/grpc/blob/master/doc/connection-backoff.md
-			grpc.WithUserAgent(clientID),
+		if tlsCert != "" {
+			certPool := x509.NewCertPool()
+			ok := certPool.AppendCertsFromPEM([]byte(tlsCert))
+			if !ok {
+				log.Fatalf("%+v", errors.New("unable to append certificate to cert pool"))
+			}
+
+			clientCreds := credentials.NewClientTLSFromCert(certPool, config.IdentityAddress)
+			clientOpts = append(clientOpts, grpc.WithTransportCredentials(clientCreds))
 		}
 
 		u, err := url.Parse(config.IdentityAddress)
@@ -44,7 +49,7 @@ func Connection(clientID string) *grpc.ClientConn {
 
 		clientConn, err := grpc.Dial(u.Host, clientOpts...)
 		if err != nil {
-			log.Fatalf("%+v", errors.New("failed connecting to Hooklift Identity service"))
+			log.Fatalf("%+v", errors.Wrapf(err, "failed connecting to Hooklift Identity service"))
 		}
 		grpcClient = clientConn
 
