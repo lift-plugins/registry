@@ -30,7 +30,7 @@ func (r *RepoBleve) Search(query string, pageNumber, resultsPerPage int) ([]*Man
 
 	results, err := r.index.Search(search)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed searching %q", query)
 	}
 
 	fmt.Printf("Results => %s\n", results)
