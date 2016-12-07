@@ -3,6 +3,9 @@ VERSION := v1.0.0
 LDFLAGS := -ldflags "-X main.Version=$(VERSION) -X main.AppName=$(NAME)"
 BLDTAGS := -tags "bleve"
 
+dev:
+	go build -tags "bleve dev" $(LDFLAGS) -o $(NAME) server/server.go
+
 test:
 	go test $(BLDTAGS) -parallel 2 ./...
 
