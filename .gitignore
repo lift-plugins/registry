@@ -1,6 +1,6 @@
 lift-registry
-client/node_modules
-client/bower_components
-client/npm-debug.log
+ui/node_modules
+ui/bower_components
+ui/npm-debug.log
 tmp
 .vscode

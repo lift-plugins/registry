@@ -7,8 +7,8 @@ import (
 	context "golang.org/x/net/context"
 
 	api "github.com/hooklift/apis/go/lift"
-	"github.com/hooklift/lift-registry/server/pkg/grpc"
-	"github.com/hooklift/lift-registry/server/pkg/identity"
+	"github.com/hooklift/lift-registry/pkg/grpc"
+	"github.com/hooklift/lift-registry/pkg/identity"
 	"github.com/hooklift/uaa/service/tokens/jwt"
 )
 
@@ -19,7 +19,7 @@ type Service struct{}
 func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.SearchResponse, error) {
 	res := new(api.SearchResponse)
 
-	matches, err := Search(r.Query, int(r.PageNumber), int(r.ResultPerPage))
+	matches, err := Search(ctx, r.Query, int(r.PageNumber), int(r.ResultPerPage))
 	if err != nil {
 
 		return res, err
@@ -102,7 +102,7 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 	}
 
 	res := new(api.PublishResponse)
-	if err := Publish(manifest); err != nil {
+	if err := Publish(ctx, manifest); err != nil {
 		return nil, err
 	}
 
@@ -118,7 +118,7 @@ func (s *Service) Unpublish(ctx context.Context, r *api.UnpublishRequest) (*api.
 	}
 
 	res := new(api.UnpublishResponse)
-	if err := Unpublish(r.Id, token.Subject); err != nil {
+	if err := Unpublish(ctx, r.Id, token.Subject); err != nil {
 		return nil, err
 	}
 	return res, nil

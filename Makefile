@@ -4,7 +4,7 @@ LDFLAGS := -ldflags "-X main.Version=$(VERSION) -X main.AppName=$(NAME)"
 BLDTAGS := -tags "bleve"
 
 dev:
-	go build -tags "bleve dev" $(LDFLAGS) -o $(NAME) server/server.go
+	go build -tags "bleve dev" $(LDFLAGS) -o $(NAME) server.go
 
 test:
 	go test $(BLDTAGS) -parallel 2 ./...
@@ -16,7 +16,7 @@ generate:
 	go generate client/webapp.go
 
 build:
-	go build $(BLDTAGS) $(LDFLAGS) -o $(NAME) server/server.go
+	go build $(BLDTAGS) $(LDFLAGS) -o $(NAME) server.go
 
 clean:
 	go clean $(BLDTAGS) $(LDFLAGS)
@@ -39,13 +39,13 @@ dist: compile
 	done
 
 swagger:
-	cp $(GOPATH)/src/github.com/hooklift/apis/browser/lift-registry.swagger.json client/public/lib/api.swagger.json
+	cp $(GOPATH)/src/github.com/hooklift/apis/browser/lift.swagger.json ui/public/lib/api.swagger.json
 
 release: test dist
 	@latest_tag=$$(git describe --tags `git rev-list --tags --max-count=1`); \
 	comparison="$$latest_tag..HEAD"; \
 	if [ -z "$$latest_tag" ]; then comparison=""; fi; \
-	changelog=$$(git log $$comparison --oneline --no-merges --reverse); \
+	changelog=$$(git log $$comparison --oneline --no-merges); \
 	github-release hooklift/$(NAME) $(VERSION) "$$(git rev-parse --abbrev-ref HEAD)" "**Changelog**<br/>$$changelog" 'dist/*'; \
 	git pull
 

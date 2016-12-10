@@ -1,6 +1,7 @@
 package files
 
 import (
+	"context"
 	"io"
 	"mime/multipart"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/hooklift/lift-registry/server/config"
+	"github.com/hooklift/lift-registry/config"
 	"github.com/pkg/errors"
 )
 
@@ -36,7 +37,7 @@ func NewS3() StorageProvider {
 }
 
 // Upload uploads file parts to S3 as they arrive from the client.
-func (s *S3) Upload(reader *multipart.Reader) error {
+func (s *S3) Upload(ctx context.Context, reader *multipart.Reader) error {
 	for {
 		part, err := reader.NextPart()
 		if err == io.EOF {
@@ -66,7 +67,7 @@ func (s *S3) Upload(reader *multipart.Reader) error {
 
 // Get streams down a package file from S3.
 // The caller must close the reader once it finishes reading from it.
-func (s *S3) Get(key string) (io.ReadCloser, error) {
+func (s *S3) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 	result, err := s.downloader.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(config.S3Bucket),
 		Key:    aws.String(key),

@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang/glog"
 	idapi "github.com/hooklift/apis/go/identity"
-	"github.com/hooklift/lift-registry/server/config"
+	"github.com/hooklift/lift-registry/config"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

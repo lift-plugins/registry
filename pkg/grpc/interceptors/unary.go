@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	idapi "github.com/hooklift/apis/go/identity"
-	"github.com/hooklift/lift-registry/server/pkg/identity"
+	"github.com/hooklift/lift-registry/pkg/identity"
 )
 
 // DefaultUnary is the default unary interceptor handler

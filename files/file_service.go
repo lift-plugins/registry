@@ -1,6 +1,7 @@
 package files
 
 import (
+	"context"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -8,14 +9,14 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
-	"github.com/hooklift/lift-registry/server/pkg/identity"
-	"github.com/hooklift/lift-registry/server/pkg/render"
+	"github.com/hooklift/lift-registry/pkg/identity"
+	"github.com/hooklift/lift-registry/pkg/render"
 )
 
 // StorageProvider defines the contract for storage providers.
 type StorageProvider interface {
-	Upload(reader *multipart.Reader) error
-	Get(filepath string) (io.ReadCloser, error)
+	Upload(ctx context.Context, reader *multipart.Reader) error
+	Get(ctx context.Context, filepath string) (io.ReadCloser, error)
 }
 
 // Response is the type of the payload sent back as response for uploading files.
@@ -45,7 +46,8 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := provider.Upload(reader); err != nil {
+	ctx := r.Context()
+	if err := provider.Upload(ctx, reader); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -55,7 +57,8 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
 // getPackage streams the requested file down to the user from the storage provider.
 func getPackage(w http.ResponseWriter, r *http.Request) {
-	reader, err := provider.Get(path.Base(r.URL.Path))
+	ctx := r.Context()
+	reader, err := provider.Get(ctx, path.Base(r.URL.Path))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

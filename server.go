@@ -11,12 +11,12 @@ import (
 	"github.com/golang/glog"
 	_ "google.golang.org/grpc/grpclog/glogger"
 
-	"github.com/hooklift/lift-registry/client"
-	"github.com/hooklift/lift-registry/server/config"
-	"github.com/hooklift/lift-registry/server/files"
-	"github.com/hooklift/lift-registry/server/pkg/grpc"
-	"github.com/hooklift/lift-registry/server/pkg/identity"
-	"github.com/hooklift/lift-registry/server/plugin"
+	"github.com/hooklift/lift-registry/config"
+	"github.com/hooklift/lift-registry/files"
+	"github.com/hooklift/lift-registry/pkg/grpc"
+	"github.com/hooklift/lift-registry/pkg/identity"
+	"github.com/hooklift/lift-registry/plugin"
+	"github.com/hooklift/uaa/ui"
 )
 
 var (
@@ -81,7 +81,7 @@ func main() {
 
 	// These middlewares are invoked bottom up and order matters.
 	// Single Page Application  web UI
-	handler := client.Handler(http.DefaultServeMux)
+	handler := ui.Handler(http.DefaultServeMux)
 	// File management API to upload or download packages
 	handler = files.Handler(handler)
 	// HTTP security filter, for non gRPC requests

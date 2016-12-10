@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/hooklift/lift-registry/server/config"
-	"github.com/hooklift/lift-registry/server/pkg/grpc/interceptors"
+	"github.com/hooklift/lift-registry/config"
+	"github.com/hooklift/lift-registry/pkg/grpc/interceptors"
 )
 
 // ServiceEndpoint represents an endpoint in the GRPC server and HTTP Gateway muxer.

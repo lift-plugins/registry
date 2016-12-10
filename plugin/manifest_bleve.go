@@ -3,6 +3,7 @@
 package plugin
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"time"
@@ -25,7 +26,7 @@ func NewRepository(index bleve.Index) Repository {
 }
 
 // Search finds plugin manifests in Bleve.
-func (r *RepoBleve) Search(query string, pageNumber, resultsPerPage int) ([]*Manifest, error) {
+func (r *RepoBleve) Search(ctx context.Context, query string, pageNumber, resultsPerPage int) ([]*Manifest, error) {
 	matchQuery := bleve.NewMatchQuery(query)
 	search := bleve.NewSearchRequest(matchQuery)
 	search.Size = resultsPerPage
@@ -119,7 +120,7 @@ func (r *RepoBleve) Search(query string, pageNumber, resultsPerPage int) ([]*Man
 }
 
 // Save indexes plugin metadata in Bleve's index.
-func (r *RepoBleve) Save(p *Manifest) error {
+func (r *RepoBleve) Save(ctx context.Context, p *Manifest) error {
 	if p == nil {
 		return errors.New("manifest is required")
 	}
@@ -132,7 +133,7 @@ func (r *RepoBleve) Save(p *Manifest) error {
 }
 
 // Delete removes plugin from Bleve index.
-func (r *RepoBleve) Delete(id, accountID string) error {
+func (r *RepoBleve) Delete(ctx context.Context, id, accountID string) error {
 	if id == "" {
 		return errors.New("document ID is required")
 	}

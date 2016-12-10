@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"time"
 
 	version "github.com/hashicorp/go-version"
@@ -13,9 +14,9 @@ var Repo Repository
 
 // Repository is the interface to implement in order to retrieve data from a specific repository.
 type Repository interface {
-	Search(query string, pageNumber, resultsPerPage int) ([]*Manifest, error)
-	Save(p *Manifest) error
-	Delete(id, accountID string) error
+	Search(ctx context.Context, query string, pageNumber, resultsPerPage int) ([]*Manifest, error)
+	Save(ctx context.Context, p *Manifest) error
+	Delete(ctx context.Context, id, accountID string) error
 }
 
 // Arch is the CPU architecture for which a plugin package was compiled.
@@ -88,7 +89,7 @@ type Manifest struct {
 }
 
 // Search runs the specified query on the index file and returns a list of plugins.
-func Search(query string, pageNumber, resultsPerPage int) ([]*Manifest, error) {
+func Search(ctx context.Context, query string, pageNumber, resultsPerPage int) ([]*Manifest, error) {
 	if resultsPerPage == 0 {
 		resultsPerPage = 10
 	}
@@ -97,11 +98,11 @@ func Search(query string, pageNumber, resultsPerPage int) ([]*Manifest, error) {
 		resultsPerPage = 50
 	}
 
-	return Repo.Search(query, pageNumber, resultsPerPage)
+	return Repo.Search(ctx, query, pageNumber, resultsPerPage)
 }
 
 // Publish adds the plugin document into the index.
-func Publish(p *Manifest) error {
+func Publish(ctx context.Context, p *Manifest) error {
 	if p == nil {
 		return errors.New("a valid manifest is required")
 	}
@@ -119,11 +120,11 @@ func Publish(p *Manifest) error {
 	p.ID = uuid.NewV4().String()
 	p.PublishedAt = time.Now()
 
-	return Repo.Save(p)
+	return Repo.Save(ctx, p)
 }
 
 // Unpublish removes a plugin from the index.
-func Unpublish(id, accountID string) error {
+func Unpublish(ctx context.Context, id, accountID string) error {
 	if id == "" {
 		return errors.New("document ID is required")
 	}
@@ -132,5 +133,5 @@ func Unpublish(id, accountID string) error {
 		return errors.New("account ID is required")
 	}
 
-	return Repo.Delete(id, accountID)
+	return Repo.Delete(ctx, id, accountID)
 }
