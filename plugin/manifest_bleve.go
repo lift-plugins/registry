@@ -31,6 +31,11 @@ func (r *RepoBleve) Search(ctx context.Context, query string, pageNumber, result
 	search := bleve.NewSearchRequest(matchQuery)
 	search.Size = resultsPerPage
 	search.From = pageNumber
+	search.SortBy([]string{"-_score", "_id"})
+
+	if err := search.Validate(); err != nil {
+		return nil, errors.Wrap(err, "invalid search query")
+	}
 
 	// The list of fields has to be updated whenever there is a change in the Manifest type. We could also use
 	// reflection but it may be too slow.

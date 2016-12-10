@@ -6,7 +6,6 @@ import (
 
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 )
 
 // Repo should be initialized by a concrete repository implementation.
@@ -117,7 +116,7 @@ func Publish(ctx context.Context, p *Manifest) error {
 	}
 
 	p.Version = ver.String()
-	p.ID = uuid.NewV4().String()
+	p.ID = p.Name
 	p.PublishedAt = time.Now()
 
 	return Repo.Save(ctx, p)
