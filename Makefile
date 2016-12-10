@@ -13,7 +13,7 @@ testrace:
 	go test $(BLDTAGS) -parallel 2 -race ./...
 
 generate:
-	go generate client/webapp.go
+	go generate ui/webapp.go
 
 build:
 	go build $(BLDTAGS) $(LDFLAGS) -o $(NAME) server.go
