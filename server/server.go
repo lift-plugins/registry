@@ -60,7 +60,6 @@ func initRepos(index bleve.Index) {
 	plugin.Repo = plugin.NewRepository(index)
 }
 
-
 func main() {
 	appName := AppName + "-" + Version
 	flag.Parse()
@@ -81,10 +80,15 @@ func main() {
 	}
 
 	// These middlewares are invoked bottom up and order matters.
-	handler := client.Handler(http.DefaultServeMux)       // Single Page Application  web UI
-	handler = files.Handler(handler)                      // File management API to upload or download packages
-	handler = identity.Handler(handler, config.ClientURI) // HTTP security filter, for non gRPC requests
-	handler = grpc.Handler(handler, services)             // gRPC services, uses interceptors to verify authorization tokens.
+	// Single Page Application  web UI
+	handler := client.Handler(http.DefaultServeMux)
+	// File management API to upload or download packages
+	handler = files.Handler(handler)
+	// HTTP security filter, for non gRPC requests
+	handler = identity.Handler(handler, config.ClientURI)
+	// gRPC services, uses interceptors to verify authorization tokens.
+	handler = grpc.Handler(handler, services)
+	// HTTP Logger
 	handler = logger.Handler(handler, logger.AppName(appName))
 
 	tlsKeyPair, err := tls.X509KeyPair([]byte(config.TLSCert), []byte(config.TLSKey))
