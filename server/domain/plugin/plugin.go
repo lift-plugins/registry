@@ -89,6 +89,14 @@ type Manifest struct {
 
 // Search runs the specified query on the index file and returns a list of plugins.
 func Search(query string, pageNumber, resultsPerPage int) ([]*Manifest, error) {
+	if resultsPerPage == 0 {
+		resultsPerPage = 10
+	}
+
+	if resultsPerPage > 50 {
+		resultsPerPage = 50
+	}
+
 	return Repo.Search(query, pageNumber, resultsPerPage)
 }
 

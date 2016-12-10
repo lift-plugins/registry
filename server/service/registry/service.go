@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 	context "golang.org/x/net/context"
 
-	api "github.com/hooklift/apis/go/lift-registry"
+	api "github.com/hooklift/apis/go/lift"
 	"github.com/hooklift/lift-registry/server/domain/plugin"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
 	"github.com/hooklift/lift-registry/server/pkg/identity"
@@ -29,7 +29,10 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 	// Annoying conversion from domain object to api object.
 	for _, m := range matches {
 		manifest := new(api.PluginManifest)
-		manifest.Author = (*api.Author)(&m.Author)
+		manifest.Author = &api.Author{
+			Name:  m.Author.Name,
+			Email: m.Author.Email,
+		}
 		manifest.Description = m.Description
 		manifest.Homepage = m.Homepage
 		manifest.Name = m.Name
@@ -44,7 +47,7 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 		}
 		manifest.PublishedAt = publishedAt
 
-		manifest.Packages = make([]*api.Package, len(m.Packages))
+		manifest.Packages = make([]*api.Package, 0)
 		for _, p := range m.Packages {
 			pkg := new(api.Package)
 			pkg.Name = p.Name
@@ -87,7 +90,7 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 	manifest.Version = p.Version
 	manifest.FilesURI = p.FilesUri
 
-	manifest.Packages = make([]*plugin.Package, len(p.Packages))
+	manifest.Packages = make([]*plugin.Package, 0)
 	for _, pp := range p.GetPackages() {
 		pkg := new(plugin.Package)
 		pkg.Name = pp.Name
@@ -100,7 +103,6 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 	}
 
 	res := new(api.PublishResponse)
-
 	if err := plugin.Publish(manifest); err != nil {
 		return nil, err
 	}
