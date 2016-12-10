@@ -1,4 +1,4 @@
-package registry
+package plugin
 
 import (
 	"github.com/golang/glog"
@@ -7,7 +7,6 @@ import (
 	context "golang.org/x/net/context"
 
 	api "github.com/hooklift/apis/go/lift"
-	"github.com/hooklift/lift-registry/server/domain/plugin"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
 	"github.com/hooklift/lift-registry/server/pkg/identity"
 	"github.com/hooklift/uaa/service/tokens/jwt"
@@ -20,7 +19,7 @@ type Service struct{}
 func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.SearchResponse, error) {
 	res := new(api.SearchResponse)
 
-	matches, err := plugin.Search(r.Query, int(r.PageNumber), int(r.ResultPerPage))
+	matches, err := Search(r.Query, int(r.PageNumber), int(r.ResultPerPage))
 	if err != nil {
 
 		return res, err
@@ -78,32 +77,32 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 		return nil, errors.New("unauthorized")
 	}
 
-	manifest := new(plugin.Manifest)
+	manifest := new(Manifest)
 	p := r.GetPlugin()
 
 	manifest.Name = p.Name
 	manifest.AccountID = token.Subject
-	manifest.Author = plugin.Author(*p.Author)
+	manifest.Author = Author(*p.Author)
 	manifest.Description = p.Description
 	manifest.Homepage = p.Homepage
 	manifest.License = p.License
 	manifest.Version = p.Version
 	manifest.FilesURI = p.FilesUri
 
-	manifest.Packages = make([]*plugin.Package, 0)
+	manifest.Packages = make([]*Package, 0)
 	for _, pp := range p.GetPackages() {
-		pkg := new(plugin.Package)
+		pkg := new(Package)
 		pkg.Name = pp.Name
-		pkg.Algorithm = plugin.Algorithm(pp.Algorithm)
-		pkg.Arch = plugin.Arch(pp.Arch)
+		pkg.Algorithm = Algorithm(pp.Algorithm)
+		pkg.Arch = Arch(pp.Arch)
 		pkg.Checksum = pp.Checksum
-		pkg.OS = plugin.OS(pp.Os)
+		pkg.OS = OS(pp.Os)
 
 		manifest.Packages = append(manifest.Packages, pkg)
 	}
 
 	res := new(api.PublishResponse)
-	if err := plugin.Publish(manifest); err != nil {
+	if err := Publish(manifest); err != nil {
 		return nil, err
 	}
 
@@ -119,7 +118,7 @@ func (s *Service) Unpublish(ctx context.Context, r *api.UnpublishRequest) (*api.
 	}
 
 	res := new(api.UnpublishResponse)
-	if err := plugin.Unpublish(r.Id, token.Subject); err != nil {
+	if err := Unpublish(r.Id, token.Subject); err != nil {
 		return nil, err
 	}
 	return res, nil

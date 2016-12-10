@@ -13,11 +13,10 @@ import (
 
 	"github.com/hooklift/lift-registry/client"
 	"github.com/hooklift/lift-registry/server/config"
-	"github.com/hooklift/lift-registry/server/domain"
+	"github.com/hooklift/lift-registry/server/files"
 	"github.com/hooklift/lift-registry/server/pkg/grpc"
 	"github.com/hooklift/lift-registry/server/pkg/identity"
-	"github.com/hooklift/lift-registry/server/service/files"
-	"github.com/hooklift/lift-registry/server/service/registry"
+	"github.com/hooklift/lift-registry/server/plugin"
 )
 
 var (
@@ -51,8 +50,16 @@ func initBleve() {
 		glog.Fatalf("unable to open Bleve index at %q", config.IndexFile)
 	}
 
-	domain.Init(index)
+	initRepos(index)
 }
+
+// initRepos initializes all the domain modules with their respective
+// repository implementation.
+func initRepos(index bleve.Index) {
+	// The repository layer compiled is determined by build flags
+	plugin.Repo = plugin.NewRepository(index)
+}
+
 
 func main() {
 	appName := AppName + "-" + Version
@@ -70,7 +77,7 @@ func main() {
 
 	// GRPC services
 	services := []grpc.ServiceRegisterFn{
-		registry.Register,
+		plugin.Register,
 	}
 
 	// These middlewares are invoked bottom up and order matters.
