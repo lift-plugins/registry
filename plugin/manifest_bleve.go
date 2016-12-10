@@ -3,8 +3,10 @@
 package plugin
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 
@@ -152,8 +154,12 @@ func (r *RepoBleve) Delete(ctx context.Context, id, accountID string) error {
 		return errors.Wrapf(err, "document ID %q does not exist", id)
 	}
 
+	if doc == nil {
+		return fmt.Errorf("plugin %q not found", id)
+	}
+
 	for _, f := range doc.Fields {
-		if f.Name() == accountID {
+		if f.Name() == "_account_id" && bytes.Equal(f.Value(), []byte(accountID)) {
 			return r.index.Delete(id)
 		}
 	}

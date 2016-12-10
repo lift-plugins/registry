@@ -9,7 +9,6 @@ import (
 	api "github.com/hooklift/apis/go/lift"
 	"github.com/hooklift/lift-registry/pkg/grpc"
 	"github.com/hooklift/lift-registry/pkg/identity"
-	"github.com/hooklift/uaa/service/tokens/jwt"
 )
 
 // Service implements Lift Registry service.
@@ -111,9 +110,15 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 
 // Unpublish ...
 func (s *Service) Unpublish(ctx context.Context, r *api.UnpublishRequest) (*api.UnpublishResponse, error) {
-	token, ok := jwt.FromContext(ctx)
-	if !ok && !token.Scopes.Has("global") && !token.Scopes.Has("write") {
-		// Convert to grpc error
+	token, ok := identity.FromContext(ctx)
+	if !ok {
+		return nil, errors.New("unauthorized")
+	}
+
+	_, okg := token.Scopes["global"]
+	_, okw := token.Scopes["write"]
+
+	if !okg && !okw {
 		return nil, errors.New("unauthorized")
 	}
 
