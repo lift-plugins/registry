@@ -29,35 +29,16 @@ func NewRepository(index bleve.Index) Repository {
 
 // Search finds plugin manifests in Bleve.
 func (r *RepoBleve) Search(ctx context.Context, query string, pageNumber, resultsPerPage int) ([]*Manifest, error) {
-	matchQuery := bleve.NewMatchQuery(query)
+	matchQuery := bleve.NewQueryStringQuery(query)
+	matchQuery.SetBoost(1)
 	search := bleve.NewSearchRequest(matchQuery)
 	search.Size = resultsPerPage
 	search.From = pageNumber
 	search.SortBy([]string{"-_score", "_id"})
+	search.Fields = []string{"*"}
 
 	if err := search.Validate(); err != nil {
 		return nil, errors.Wrap(err, "invalid search query")
-	}
-
-	// The list of fields has to be updated whenever there is a change in the Manifest type. We could also use
-	// reflection but it may be too slow.
-	search.Fields = []string{
-		"_id",
-		"_account_id",
-		"name",
-		"files_uri",
-		"version",
-		"description",
-		"author.name",
-		"author.email",
-		"license",
-		"homepage",
-		"packages.name",
-		"packages.arch",
-		"packages.os",
-		"packages.checksum",
-		"packages.algorithm",
-		"published_at",
 	}
 
 	results, err := r.index.Search(search)
