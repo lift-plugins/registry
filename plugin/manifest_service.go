@@ -8,7 +8,7 @@ import (
 
 	api "github.com/hooklift/apis/go/lift"
 	"github.com/hooklift/lift-registry/pkg/grpc"
-	"github.com/hooklift/lift-registry/pkg/identity"
+	identity "github.com/hooklift/uaa/pkg/client"
 )
 
 // Service implements Lift Registry service.

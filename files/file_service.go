@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
-	"github.com/hooklift/lift-registry/pkg/identity"
 	"github.com/hooklift/lift-registry/pkg/render"
+	identity "github.com/hooklift/uaa/pkg/client"
 )
 
 // StorageProvider defines the contract for storage providers.

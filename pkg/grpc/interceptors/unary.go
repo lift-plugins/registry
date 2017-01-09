@@ -10,14 +10,15 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	idapi "github.com/hooklift/apis/go/identity"
-	"github.com/hooklift/lift-registry/pkg/identity"
+	"github.com/hooklift/lift-registry/config"
+	identity "github.com/hooklift/uaa/pkg/client"
 )
 
 // DefaultUnary is the default unary interceptor handler
 var DefaultUnary = grpc.UnaryServerInterceptor(nil)
 
 // UnarySecurity checks whether an access token was provided and decodes it. Otherwise, it yields to the next interceptor or the service function called.
-func UnarySecurity(next grpc.UnaryServerInterceptor, clientURI string) grpc.UnaryServerInterceptor {
+func UnarySecurity(next grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
 	yieldFn := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (resp interface{}, err error) {
 
@@ -27,7 +28,7 @@ func UnarySecurity(next grpc.UnaryServerInterceptor, clientURI string) grpc.Unar
 		return handler(ctx, req)
 	}
 
-	accounts := idapi.NewAccountsClient(identity.Connection(clientURI))
+	accounts := idapi.NewAccountsClient(identity.Connection(config.ClientURI))
 
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		md, ok := metadata.FromContext(ctx)
@@ -52,7 +53,7 @@ func UnarySecurity(next grpc.UnaryServerInterceptor, clientURI string) grpc.Unar
 		tokenValue := tokenParts[1]
 
 		res, err := accounts.VerifyToken(ctx, &idapi.VerifyTokenRequest{
-			ClientUri: clientURI,
+			ClientUri: config.ClientURI,
 			Token:     tokenValue,
 		})
 

@@ -14,9 +14,9 @@ import (
 	"github.com/hooklift/lift-registry/config"
 	"github.com/hooklift/lift-registry/files"
 	"github.com/hooklift/lift-registry/pkg/grpc"
-	"github.com/hooklift/lift-registry/pkg/identity"
 	"github.com/hooklift/lift-registry/plugin"
-	"github.com/hooklift/uaa/ui"
+	"github.com/hooklift/lift-registry/ui"
+	identity "github.com/hooklift/uaa/pkg/client"
 )
 
 var (

@@ -36,7 +36,7 @@ func initGRPCServer() *grpc.Server {
 	serverOpts := []grpc.ServerOption{
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 		grpc.UnaryInterceptor(func() grpc.UnaryServerInterceptor {
-			interceptor := interceptors.UnarySecurity(interceptors.DefaultUnary, config.ClientURI)
+			interceptor := interceptors.UnarySecurity(interceptors.DefaultUnary)
 			interceptor = interceptors.UnaryMetrics(interceptor)
 			return interceptor
 		}()),
@@ -60,7 +60,6 @@ func initGRPCLocalClient() *grpc.ClientConn {
 	clientCreds := credentials.NewClientTLSFromCert(certPool, config.PrimaryDomain)
 	clientOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(clientCreds),
-		//grpc.WithBackoffMaxDelay(1 * time.Second),
 		grpc.WithUserAgent("grpc-gw"),
 	}
 
