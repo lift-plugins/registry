@@ -60,11 +60,6 @@ func Read() {
 		IndexFile = "tmp/registry.bleve"
 	}
 
-	IdentityAddress = os.Getenv("IDENTITY_ADDR")
-	if IdentityAddress == "" {
-		IdentityAddress = "https://localhost:9000"
-	}
-
 	// For development purposes, use the following command to regenerate cert:
 	// openssl req -new -x509 -key cert-key.pem -out cert.pem -days 1920
 	TLSCert = os.Getenv("TLS_CERT")
