@@ -28,7 +28,7 @@ func UnarySecurity(next grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor
 		return handler(ctx, req)
 	}
 
-	accounts := idapi.NewAccountsClient(identity.Connection(config.ClientURI))
+	accounts := idapi.NewAccountsClient(identity.Connection(config.IdentityService, config.ClientURI))
 
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		md, ok := metadata.FromContext(ctx)

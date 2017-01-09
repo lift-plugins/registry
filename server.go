@@ -85,7 +85,7 @@ func main() {
 	// File management API to upload or download packages
 	handler = files.Handler(handler)
 	// HTTP security filter, for non gRPC requests
-	handler = identity.Handler(handler, config.ClientURI)
+	handler = identity.Handler(handler, config.IdentityService, config.ClientURI)
 	// gRPC services, uses interceptors to verify authorization tokens.
 	handler = grpc.Handler(handler, services)
 	// HTTP Logger

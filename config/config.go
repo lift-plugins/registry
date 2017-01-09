@@ -22,6 +22,8 @@ var (
 	S3Bucket string
 	// IndexFile contains the path to the database file where we store everything that is published.
 	IndexFile string
+	// IdentityService is the address to Hooklift identity service
+	IdentityService string
 )
 
 // Read loads the configuration values.
@@ -75,5 +77,10 @@ func Read() {
 	ClientURI = os.Getenv("OAUTH2_CLIENT_URI")
 	if ClientURI == "" {
 		ClientURI = "https://lift.hooklift.io"
+	}
+
+	IdentityService = os.Getenv("IDENTITY_SERVICE")
+	if IdentityService == "" {
+		IdentityService = "https://localhost:9000"
 	}
 }
