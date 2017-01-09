@@ -22,8 +22,6 @@ var (
 	S3Bucket string
 	// IndexFile contains the path to the database file where we store everything that is published.
 	IndexFile string
-	// IdentityAddress is the address to the identity server used to verify user's tokens.
-	IdentityAddress string
 )
 
 // Read loads the configuration values.
