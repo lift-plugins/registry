@@ -32,10 +32,10 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, okg := token.Scopes["global"]
+	_, oka := token.Scopes["admin"]
 	_, okw := token.Scopes["write"]
 
-	if !okg || !okw {
+	if !oka || !okw {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

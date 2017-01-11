@@ -69,10 +69,10 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 		return nil, errors.New("unauthorized")
 	}
 
-	_, okg := token.Scopes["global"]
+	_, oka := token.Scopes["admin"]
 	_, okw := token.Scopes["write"]
 
-	if !okg && !okw {
+	if !oka && !okw {
 		return nil, errors.New("unauthorized")
 	}
 
@@ -115,10 +115,10 @@ func (s *Service) Unpublish(ctx context.Context, r *api.UnpublishRequest) (*api.
 		return nil, errors.New("unauthorized")
 	}
 
-	_, okg := token.Scopes["global"]
+	_, oka := token.Scopes["admin"]
 	_, okw := token.Scopes["write"]
 
-	if !okg && !okw {
+	if !oka && !okw {
 		return nil, errors.New("unauthorized")
 	}
 
