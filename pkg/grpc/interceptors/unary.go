@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
+	apiClient "github.com/hooklift/apis/go/client"
 	idapi "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift-registry/config"
 	identity "github.com/hooklift/uaa/pkg/client"
@@ -28,7 +29,7 @@ func UnarySecurity(next grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor
 		return handler(ctx, req)
 	}
 
-	accounts := idapi.NewAccountsClient(identity.Connection(config.IdentityService, config.ClientURI))
+	accounts := idapi.NewAccountsClient(apiClient.Connection(config.IdentityService, config.ClientURI))
 
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		md, ok := metadata.FromContext(ctx)
