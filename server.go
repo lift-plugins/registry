@@ -7,13 +7,15 @@ import (
 	"net/http"
 
 	"github.com/blevesearch/bleve"
+	"github.com/c4milo/handlers/grpcutil"
 	"github.com/c4milo/handlers/logger"
 	"github.com/golang/glog"
+	"google.golang.org/grpc"
 	_ "google.golang.org/grpc/grpclog/glogger"
 
+	apiClient "github.com/hooklift/apis/go/pkg/client"
 	"github.com/hooklift/lift-registry/config"
 	"github.com/hooklift/lift-registry/files"
-	"github.com/hooklift/lift-registry/pkg/grpc"
 	"github.com/hooklift/lift-registry/plugin"
 	"github.com/hooklift/lift-registry/ui"
 	identity "github.com/hooklift/uaa/pkg/client"
@@ -75,8 +77,24 @@ func main() {
 	// metrics.NewGlobal(metrics.DefaultConfig(AppName), sink)
 
 	// GRPC services
-	services := []grpc.ServiceRegisterFn{
+	services := []grpcutil.ServiceRegisterFn{
 		plugin.Register,
+	}
+
+	tlsKeyPair, err := tls.X509KeyPair([]byte(config.TLSCert), []byte(config.TLSKey))
+	if err != nil {
+		glog.Fatalf("failed loading TLS certificate and key: %+v", err)
+	}
+
+	identityConn := apiClient.Connection(config.IdentityService, config.ClientURI)
+	options := []grpcutil.Option{
+		grpcutil.WithServerOpts([]grpc.ServerOption{
+			grpc.UnaryInterceptor(identity.TokenUnaryInt(nil, identityConn, config.ClientURI)),
+		}),
+		grpcutil.WithTLSCert(&tlsKeyPair),
+		grpcutil.WithPort(config.Port),
+		grpcutil.WithServices(services),
+		grpcutil.WithSkipPath("/lib/api.swagger.json"), // We want this to be served by our UI handler
 	}
 
 	// These middlewares are invoked bottom up and order matters.
@@ -84,17 +102,12 @@ func main() {
 	handler := ui.Handler(http.DefaultServeMux)
 	// File management API to upload or download packages
 	handler = files.Handler(handler)
-	// HTTP security filter, for non gRPC requests
-	handler = identity.Handler(handler, config.IdentityService, config.ClientURI)
-	// gRPC services, uses interceptors to verify authorization tokens.
-	handler = grpc.Handler(handler, services)
+	// gRPC services, uses unary interceptor to verify authorization tokens.
+	handler = grpcutil.Handler(handler, options...)
+	// HTTP security filter
+	handler = identity.TokenHandler(handler, identityConn, config.ClientURI)
 	// HTTP Logger
 	handler = logger.Handler(handler, logger.AppName(appName))
-
-	tlsKeyPair, err := tls.X509KeyPair([]byte(config.TLSCert), []byte(config.TLSKey))
-	if err != nil {
-		panic(err)
-	}
 
 	address := ":" + config.Port
 	srv := &http.Server{

@@ -1,13 +1,13 @@
 package plugin
 
 import (
+	"github.com/c4milo/handlers/grpcutil"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	context "golang.org/x/net/context"
 
 	api "github.com/hooklift/apis/go/lift"
-	"github.com/hooklift/lift-registry/pkg/grpc"
 	identity "github.com/hooklift/uaa/pkg/client"
 )
 
@@ -66,6 +66,7 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.PublishResponse, error) {
 	token, ok := identity.FromContext(ctx)
 	if !ok {
+		glog.V(3).Info("token not found in context")
 		return nil, errors.New("unauthorized")
 	}
 
@@ -73,6 +74,7 @@ func (s *Service) Publish(ctx context.Context, r *api.PublishRequest) (*api.Publ
 	_, okw := token.Scopes["write"]
 
 	if !oka && !okw {
+		glog.V(3).Info("token scope not sufficient for this endpoint")
 		return nil, errors.New("unauthorized")
 	}
 
@@ -130,13 +132,13 @@ func (s *Service) Unpublish(ctx context.Context, r *api.UnpublishRequest) (*api.
 }
 
 // Register registers service with a given GRPC server.
-func Register(ctx context.Context, endpoint grpc.ServiceEndpoint) error {
+func Register(binding grpcutil.ServiceBinding) error {
 	// Creates a new service instance.
 	service := new(Service)
 
 	// Registers GRPC service.
-	api.RegisterRegistryServer(endpoint.GRPCServer, service)
+	api.RegisterRegistryServer(binding.GRPCServer, service)
 
 	// Registers HTTP endpoint on GRPC gateway muxer.
-	return api.RegisterRegistryHandler(ctx, endpoint.HTTPGWMuxer, endpoint.GRPCClientConn)
+	return api.RegisterRegistryHandler(context.Background(), binding.GRPCGatewayMuxer, binding.GRPCGatewayClient)
 }
