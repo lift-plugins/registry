@@ -20,7 +20,6 @@ func (s *Service) Search(ctx context.Context, r *api.SearchRequest) (*api.Search
 
 	matches, err := Search(ctx, r.Query, int(r.PageNumber), int(r.ResultPerPage))
 	if err != nil {
-
 		return res, err
 	}
 

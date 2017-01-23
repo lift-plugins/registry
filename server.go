@@ -102,10 +102,10 @@ func main() {
 	handler := ui.Handler(http.DefaultServeMux)
 	// File management API to upload or download packages
 	handler = files.Handler(handler)
-	// gRPC services, uses unary interceptor to verify authorization tokens.
-	handler = grpcutil.Handler(handler, options...)
 	// HTTP security filter
 	handler = identity.TokenHandler(handler, identityConn, config.ClientURI)
+	// gRPC services, uses unary interceptor to verify authorization tokens.
+	handler = grpcutil.Handler(handler, options...)
 	// HTTP Logger
 	handler = logger.Handler(handler, logger.AppName(appName))
 
